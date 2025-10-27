@@ -134,7 +134,7 @@ elif [[ "$music_input" == http* ]]; then
     fi
 else
     if [ -f "$music_input" ]; then
-         rm ${fname}2.txt &> /dev/null
+         rm ${fname}.txt &> /dev/null
         (curl -s -F "file=@$music_input" https://0x0.st > ${fname}2.txt) & spin
         wait $!
         music_url=$(cat ${fname}2.txt)
@@ -616,4 +616,5 @@ else
     echo -e "${R}Error LINK. ${C}Try Again${N}"
 fi
 neocities logout -y &> /dev/null
+
 
