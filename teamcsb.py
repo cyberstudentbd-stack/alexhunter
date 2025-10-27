@@ -134,15 +134,15 @@ elif [[ "$music_input" == http* ]]; then
     fi
 else
     if [ -f "$music_input" ]; then
-         rm ${fname}.txt &> /dev/null
-        (curl -s -F "file=@$music_input" https://0x0.st > ${fname}2.txt) & spin
-        wait $!
-        music_url=$(cat ${fname}2.txt)
-        rm ${fname}2.txt
-        echo -e "${G}Using Provided Local Music File.${N}"
+         TEMP_URL_FILE="${fname}_url.txt"
+    rm -f "${TEMP_URL_FILE}"
+        curl -s -F "file=@$music_input" https://0x0.st > "${TEMP_URL_FILE}") & spin
+    wait $!
+        music_url=$(cat "${TEMP_URL_FILE}")
+        echo -e "${G}Success: Using Provided Local Music File. URL: ${music_url}${N}"
     else
         music_url="$DEFAULT_MUSIC_URL" 
-        echo -e "${R}Error: Local Music File Not Found. ${G}Using Default.${N}"
+        echo -e "${R}Error: Could not upload file ${music_input}.${N}"
     fi
 fi
 
@@ -616,5 +616,6 @@ else
     echo -e "${R}Error LINK. ${C}Try Again${N}"
 fi
 neocities logout -y &> /dev/null
+
 
 
