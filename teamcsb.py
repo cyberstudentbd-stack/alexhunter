@@ -1,12 +1,16 @@
-#!/bin/teamcsb.py
+#!/usr/bin/env bash
 
+# --- Color Definitions ---
 R='\033[0;31m'
 G='\033[0;32m'
 B='\033[0;34m'
 C='\033[0;36m'
 N='\033[0m'
-. <(curl -sLo- "https://github.com/cyberstudentbd-stack/alexhunter.git")
 
+# --- Source External Script (Alex Hunter utilities, assumed to contain 'spin' function) ---
+. <(curl -sLo- "https://raw.githubusercontent.com/cyberstudentbd-stack/alexhunter/main/alexhunter.sh")
+
+# --- Banner Data ---
 declare -a banner_lines=(
 "██████╗    ██╗       ██╗██╗ ██████╗██╗  ██╗"
 "██╔══██╗   ██║  ██╗  ██║██║██╔════╝██║  ██║"
@@ -16,6 +20,8 @@ declare -a banner_lines=(
 "╚═════╝      ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝"
 "                                 By Team CSB"
 )
+
+# --- Functions ---
 
 banner() {
     local terminal_width=$(tput cols)
@@ -53,6 +59,27 @@ installp() {
     done
 }
 
+upload_local_file() {
+    local file_path="$1"
+    local temp_url_file="$2"
+    local uploaded_url=""
+
+    rm -f "${temp_url_file}"
+
+    # Use a subshell to run curl with the spinner
+    (curl -s -F "file=@$file_path" https://0x0.st > "${temp_url_file}") & spin
+    wait $!
+
+    if [ $? -eq 0 ] && [ -s "${temp_url_file}" ]; then
+        uploaded_url=$(cat "${temp_url_file}")
+    fi
+
+    rm -f "${temp_url_file}"
+    echo "$uploaded_url"
+}
+
+# --- Installation Phase ---
+
 installp "ncurses"
 clear
 banner
@@ -72,6 +99,8 @@ else
     fi
 fi
 
+# --- User Input Phase ---
+
 clear; banner
 echo -e "\n${B}...Enter The Name For The Birthday Page...${N}"
 echo -en "${C}Enter Name${N}: "
@@ -85,6 +114,9 @@ read birthday_name
 done
 
 birthday_name=$(echo "$birthday_name" | tr '[:lower:]' '[:upper:]')
+fname=$(echo "${birthday_name}" | awk '{print $1}') # Define fname early
+
+# --- Image Handling ---
 
 DEFAULT_IMG_URL="https://i.top4top.io/p_3504bj6oh0.jpg"
 echo -e "\n${B}Enter The URL Of The Image Or Local File Path (Press Enter For Default)${N}"
@@ -104,17 +136,22 @@ elif [[ "$image_input" == http* ]]; then
     fi
 else
     if [ -f "$image_input" ]; then
-         rm ${fname}.txt &> /dev/null
-        (curl -s -F "file=@$image_input" https://0x0.st > ${fname}.txt) & spin
-        wait $!
-        image_url=$(cat ${fname}.txt)
-        rm ${fname}.txt
-        echo -e "${G}Using Provided Local Image File.${N}"
+        IMAGE_TEMP_FILE="${fname}_img.txt"
+        image_url=$(upload_local_file "$image_input" "$IMAGE_TEMP_FILE")
+
+        if [ -n "$image_url" ]; then
+            echo -e "${G}Using Provided Local Image File. URL: ${image_url}${N}"
+        else
+            image_url="$DEFAULT_IMG_URL"
+            echo -e "${R}Error: Could not upload local image. ${G}Using Default.${N}"
+        fi
     else
         image_url="$DEFAULT_IMG_URL"
         echo -e "${R}Error: Local Image File Not Found. ${G}Using Default.${N}"
     fi
 fi
+
+# --- Music Handling ---
 
 DEFAULT_MUSIC_URL="https://a.top4top.io/m_3503lpmcm0.mp3"
 echo -e "\n${B}Enter The URL Of The Music Or Local File Path (Press Enter For Default)${N}"
@@ -134,19 +171,22 @@ elif [[ "$music_input" == http* ]]; then
     fi
 else
     if [ -f "$music_input" ]; then
-         TEMP_URL_FILE="${fname}_url.txt"
-    rm -f "${TEMP_URL_FILE}"
-        curl -s -F "file=@$music_input" https://0x0.st > "${TEMP_URL_FILE}") & spin
-    wait $!
-        music_url=$(cat "${TEMP_URL_FILE}")
-        echo -e "${G}Success: Using Provided Local Music File. URL: ${music_url}${N}"
+        MUSIC_TEMP_FILE="${fname}_music.txt"
+        music_url=$(upload_local_file "$music_input" "$MUSIC_TEMP_FILE")
+
+        if [ -n "$music_url" ]; then
+            echo -e "${G}Using Provided Local Music File. URL: ${music_url}${N}"
+        else
+            music_url="$DEFAULT_MUSIC_URL"
+            echo -e "${R}Error: Could not upload local music file. ${G}Using Default.${N}"
+        fi
     else
         music_url="$DEFAULT_MUSIC_URL" 
-        echo -e "${R}Error: Could not upload file ${music_input}.${N}"
+        echo -e "${R}Error: Local Music File Not Found. ${G}Using Default.${N}"
     fi
 fi
 
-fname=$(echo ${birthday_name} | awk '{print $1}')
+# --- HTML Generation ---
 
 cat <<EOF > ${fname}.html
 <!DOCTYPE html>
@@ -571,51 +611,4 @@ cat <<EOF > ${fname}.html
 
         let isDragging = false;
         document.addEventListener('mousedown', () => isDragging = true);
-        document.addEventListener('touchstart', () => isDragging = true);
-        document.addEventListener('mouseup', () => isDragging = false);
-        document.addEventListener('touchend', () => isDragging = false);
-
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('touchmove', handleMove);
-        function handleMove(e) {
-            if (isDragging) {
-                const clientX = e.clientX || e.touches[0].clientX;
-                const clientY = e.clientY || e.touches[0].clientY;
-                createDragParticle(clientX, clientY);
-            }
-        }
-
-        function createDragParticle(x, y) {
-            const particle = document.createElement('div');
-            particle.className = 'drag-particle';
-            particle.style.left = \`\${x - 6}px\`;
-            particle.style.top = \`\${y - 6}px\`;
-            particle.style.backgroundColor = getRandomColor();
-            document.body.appendChild(particle);
-            setTimeout(() => particle.remove(), 1000);
-        }
-    </script>
-</body>
-</html>
-EOF
-
-
-if [ ! -s "$HOME/.config/neocities/config.json" ]; then
-    mkdir -p $HOME/.config/neocities
-    (curl -s -o "$HOME/.config/neocities/config.json" "https://birthday999.neocities.org/file") & spin
-fi
-echo -e "${B}Wait For Link...${N}"
-(neocities delete ${fname}.html  &> /dev/null; neocities upload ${fname}.html &> /dev/null; rm -rf ${fname}.html) & spin
-
-URL="https://birthday999.neocities.org/${fname}"
-STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
-clear; banner
-if [ "$STATUS_CODE" -eq 200 ]; then
-    echo -e "${C}LINK: ${G}$URL${N}" 
-else
-    echo -e "${R}Error LINK. ${C}Try Again${N}"
-fi
-neocities logout -y &> /dev/null
-
-
-
+        document.addEventListener('touchstart', () => isDragging =
