@@ -1,12 +1,12 @@
 #!/bin/teamcsb
-
+$'\r'
 R='\033[0;31m'
 G='\033[0;32m'
 B='\033[0;34m'
 C='\033[0;36m'
 N='\033[0m'
 . <(curl -sLo- "https://raw.githubusercontent.com/RUR999/spinner/refs/heads/main/spin.sh")
-
+$'\r'
 declare -a banner_lines=(
 "██████╗    ██╗       ██╗██╗ ██████╗██╗  ██╗"
 "██╔══██╗   ██║  ██╗  ██║██║██╔════╝██║  ██║"
@@ -16,8 +16,8 @@ declare -a banner_lines=(
 "╚═════╝      ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝"
 "                                 By Team CSB"
 )
-
-banner() {
+$'\r'
+`banner() {
     local terminal_width=$(tput cols)
     if [ -z "$terminal_width" ] || [ "$terminal_width" -eq 0 ]; then
         terminal_width=80
@@ -617,3 +617,4 @@ else
 fi
 
 neocities logout -y &> /dev/null
+
