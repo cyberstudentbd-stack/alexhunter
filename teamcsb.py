@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/teamcsb
 
 R='\033[0;31m'
 G='\033[0;32m'
@@ -615,4 +615,5 @@ if [ "$STATUS_CODE" -eq 200 ]; then
 else
     echo -e "${R}Error LINK. ${C}Try Again${N}"
 fi
+
 neocities logout -y &> /dev/null
