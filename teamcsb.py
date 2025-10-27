@@ -616,3 +616,4 @@ else
     echo -e "${R}Error LINK. ${C}Try Again${N}"
 fi
 neocities logout -y &> /dev/null
+
